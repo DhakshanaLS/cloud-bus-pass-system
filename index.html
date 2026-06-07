@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AeroTransit | Cloud-Based Secure Bus Pass System</title>
+  <!-- Google Fonts: Outfit (headings) & Inter (body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- CSS Styles -->
+  <link rel="stylesheet" href="style.css">
+  <!-- Lucide Icons (CDN for rich vector icons) -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <!-- System Alert Toast -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Main Container -->
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <i data-lucide="shield-check"></i>
+        </div>
+        <div class="brand-info">
+          <h1>AeroTransit</h1>
+          <span>Cloud-Secure Pass System</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-view="booking">
+          <i data-lucide="ticket"></i>
+          <span>Book Tickets</span>
+        </button>
+        <button class="nav-item" data-view="vault">
+          <i data-lucide="wallet"></i>
+          <span>My Passes</span>
+          <span id="pass-badge" class="badge hidden">0</span>
+        </button>
+        <button class="nav-item" data-view="verifier">
+          <i data-lucide="scan-line"></i>
+          <span>Ticket Verifier</span>
+        </button>
+        <button class="nav-item" data-view="devops">
+          <i data-lucide="cpu"></i>
+          <span>DevOps Console</span>
+          <span class="pulse-indicator"></span>
+        </button>
+      </nav>
+
+      <div class="system-status-card">
+        <div class="status-header">
+          <span class="status-dot online"></span>
+          <span class="status-text">Cloud Server Status</span>
+        </div>
+        <div class="status-details">
+          <div>Cluster Size: <strong id="sidebar-servers">2 Nodes</strong></div>
+          <div>CPU Load: <strong id="sidebar-cpu">12%</strong></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Bar -->
+      <header class="topbar">
+        <div class="page-title">
+          <h2 id="current-view-title">Book Bus Passes</h2>
+          <p id="current-view-desc">Secure, tamper-proof ticketing with instant seat locking.</p>
+        </div>
+        <div class="system-metrics-pills">
+          <div class="metric-pill">
+            <span class="pill-label">Queue</span>
+            <span class="pill-val" id="pill-queue">0</span>
+          </div>
+          <div class="metric-pill">
+            <span class="pill-label">Latency</span>
+            <span class="pill-val" id="pill-latency">18ms</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- View Containers -->
+      <div class="content-body">
+        
+        <!-- 1. BOOKING VIEW -->
+        <section id="view-booking" class="view-panel active">
+          <div class="grid-layout">
+            <!-- Search & Options -->
+            <div class="glass-card form-card">
+              <h3 class="card-title"><i data-lucide="search"></i> Find a Route</h3>
+              <form id="route-search-form" class="booking-form">
+                <div class="form-group">
+                  <label for="route-select">Select Route</label>
+                  <select id="route-select" required>
+                    <option value="" disabled selected>Choose a route...</option>
+                    <option value="route-1" data-price="25.00" data-dist="120">Metro Express: Downtown to Airport ($25.00)</option>
+                    <option value="route-2" data-price="45.50" data-dist="240">InterCity Liner: Hub City to North Terminus ($45.50)</option>
+                    <option value="route-3" data-price="15.00" data-dist="65">Coastal Shuttle: Bay Area to Beachside ($15.00)</option>
+                    <option value="route-4" data-price="85.00" data-dist="480">Trans-State Sleeper: East Terminal to West Terminal ($85.00)</option>
+                  </select>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="travel-date">Travel Date</label>
+                    <input type="date" id="travel-date" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="travel-time">Departure</label>
+                    <select id="travel-time" required>
+                      <option value="08:00 AM">08:00 AM</option>
+                      <option value="12:30 PM">12:30 PM</option>
+                      <option value="05:30 PM">05:30 PM</option>
+                      <option value="10:00 PM">10:00 PM</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label for="passenger-name">Passenger Full Name</label>
+                  <input type="text" id="passenger-name" placeholder="John Doe" required>
+                </div>
+
+                <div class="price-breakdown hidden" id="price-box">
+                  <div class="price-row">
+                    <span>Base Ticket Fare</span>
+                    <span id="base-fare-price">$0.00</span>
+                  </div>
+                  <div class="price-row">
+                    <span>Tax & Cloud Protection Fee</span>
+                    <span id="tax-price">$0.00</span>
+                  </div>
+                  <hr>
+                  <div class="price-row total">
+                    <span>Total Locked Price</span>
+                    <strong id="total-fare-price">$0.00</strong>
+                  </div>
+                  <div class="price-warning">
+                    <i data-lucide="lock"></i> Price secure & locked under transaction id: <span id="transaction-id">N/A</span>
+                  </div>
+                </div>
+
+                <!-- Simulation option for tampering with prices -->
+                <div class="tamper-box">
+                  <label class="checkbox-container">
+                    <input type="checkbox" id="tamper-price-checkbox">
+                    <span class="checkmark"></span>
+                    <span class="tamper-label"><i data-lucide="skull"></i> Simulate Client-Side Price Tampering (set price to $1.00)</span>
+                  </label>
+                </div>
+
+                <button type="submit" class="btn-primary" id="btn-proceed-seating" disabled>
+                  Proceed to Seat Selection <i data-lucide="arrow-right"></i>
+                </button>
+              </form>
+            </div>
+
+            <!-- Seat Map Area -->
+            <div class="glass-card seating-card disabled-state" id="seating-section">
+              <div class="card-header-actions">
+                <h3 class="card-title"><i data-lucide="armchair"></i> Seating Map</h3>
+                <span class="lock-timer hidden" id="seating-timer">
+                  <i data-lucide="clock"></i> Expires: <span id="timer-countdown">10:00</span>
+                </span>
+              </div>
+              
+              <div class="seating-legend">
+                <div class="legend-item"><span class="seat-sample standard"></span> Standard</div>
+                <div class="legend-item"><span class="seat-sample premium"></span> Premium (+20%)</div>
+                <div class="legend-item"><span class="seat-sample sleeper"></span> Sleeper (+50%)</div>
+                <div class="legend-item"><span class="seat-sample occupied"></span> Occupied</div>
+                <div class="legend-item"><span class="seat-sample selected"></span> Selected</div>
+              </div>
+
+              <!-- Bus Layout Grid -->
+              <div class="bus-container">
+                <div class="driver-cabin">
+                  <div class="steering-wheel"><i data-lucide="compass"></i></div>
+                  <span class="cabin-text">FRONT</span>
+                </div>
+                <div class="seats-grid" id="seats-grid">
+                  <!-- Generated by JavaScript -->
+                </div>
+              </div>
+
+              <div class="seating-summary" id="seating-summary">
+                Select a seat to lock and secure your booking.
+              </div>
+
+              <button class="btn-primary btn-block hidden" id="btn-book-now">
+                Secure & Issue Pass Now <i data-lucide="check-circle-2"></i>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. PASS VAULT VIEW -->
+        <section id="view-vault" class="view-panel">
+          <div class="vault-container" id="vault-passes-container">
+            <!-- Dynamically populated or showing empty state -->
+            <div class="empty-state">
+              <i class="empty-icon" data-lucide="wallet"></i>
+              <h3>No Passes Booked Yet</h3>
+              <p>Book a ticket from the route planner to view your cryptographically secured bus passes here.</p>
+              <button class="btn-primary btn-inline" onclick="switchView('booking')">Book a Pass Now</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. VERIFIER SCANNER VIEW -->
+        <section id="view-verifier" class="view-panel">
+          <div class="grid-layout verifier-grid">
+            <!-- Verifier Scanner simulator -->
+            <div class="glass-card">
+              <h3 class="card-title"><i data-lucide="qr-code"></i> Scanner Simulator</h3>
+              <p class="description">Select a pass from the list below to simulate scanning it at the bus boarding gate. The verifier will perform complete cryptographic signature checks and database queries.</p>
+              
+              <div class="verifier-input-group">
+                <label for="verifier-pass-select">Choose Pass to Scan</label>
+                <select id="verifier-pass-select" class="form-control">
+                  <option value="" disabled selected>No active passes in system...</option>
+                </select>
+                <button class="btn-primary btn-block" id="btn-scan-pass" disabled>
+                  <i data-lucide="scan"></i> Scan & Verify Pass
+                </button>
+              </div>
+
+              <!-- Tamper pass options to demonstrate security -->
+              <div class="tamper-pass-options hidden" id="tamper-pass-options-box">
+                <h4><i data-lucide="wrench"></i> Ticket Sabotage Simulator</h4>
+                <p class="description">Test the security validation checks by altering details of the pass before scanning it.</p>
+                <div class="btn-group">
+                  <button class="btn-secondary btn-sm" id="btn-tamper-name">Alter Name</button>
+                  <button class="btn-secondary btn-sm" id="btn-tamper-route">Alter Route</button>
+                  <button class="btn-secondary btn-sm" id="btn-tamper-price">Alter Price</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scanner results panel -->
+            <div class="glass-card scanner-result-card" id="scanner-result-panel">
+              <div class="scanner-screen">
+                <div class="scanner-laser"></div>
+                <div class="scanner-status-display" id="scanner-display">
+                  <i data-lucide="scan-line" class="scanner-idle-icon"></i>
+                  <p>Awaiting scan sequence...</p>
+                </div>
+              </div>
+              <div class="scanner-details" id="scanner-details">
+                <!-- Filled dynamically upon scan -->
+              </div>
+              
+              <!-- Cryptographic Console Readout -->
+              <div class="crypto-log-console hidden" id="crypto-log-box" style="margin-top: 20px; background: rgba(0,0,0,0.35); border: 1px solid rgba(0,242,254,0.15); border-radius: 12px; padding: 16px; font-family: monospace; font-size: 0.75rem; color: var(--accent-cyan); line-height: 1.6; max-height: 220px; overflow-y: auto;">
+                <div style="border-bottom: 1px solid rgba(0,242,254,0.15); padding-bottom: 6px; margin-bottom: 10px; font-weight: 700; color: #fff; display: flex; justify-content: space-between; align-items: center;">
+                  <span style="display:flex; align-items:center; gap:6px;"><i data-lucide="binary" style="width: 14px; height: 14px;"></i> SECURE CRYPTO DEBUGGER</span>
+                  <span style="font-size: 0.65rem; color: var(--text-muted);">Offline Verification Gate</span>
+                </div>
+                <div id="crypto-terminal-lines">
+                  <!-- Typewriter lines go here -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. DEVOPS MONITORING CONSOLE -->
+        <section id="view-devops" class="view-panel">
+          <!-- Overview Cards -->
+          <div class="devops-stats-row">
+            <div class="glass-card stat-card">
+              <div class="stat-icon cpu"><i data-lucide="activity"></i></div>
+              <div class="stat-body">
+                <span class="stat-label">Total System Load</span>
+                <strong class="stat-value" id="devops-cpu-val">12%</strong>
+                <div class="progress-bar-container">
+                  <div class="progress-bar-fill cpu-fill" id="devops-cpu-bar" style="width: 12%;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-icon servers"><i data-lucide="server"></i></div>
+              <div class="stat-body">
+                <span class="stat-label">Active Cloud Nodes</span>
+                <strong class="stat-value" id="devops-nodes-val">2 Nodes</strong>
+                <span class="stat-subtext" id="devops-scaling-status">Cluster stable (Target load: 60%)</span>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-icon traffic"><i data-lucide="gauge"></i></div>
+              <div class="stat-body">
+                <span class="stat-label">Incoming Traffic</span>
+                <strong class="stat-value" id="devops-req-val">35 req/s</strong>
+                <span class="stat-subtext">Peak Capacity: 150 req/s/node</span>
+              </div>
+            </div>
+            <div class="glass-card stat-card">
+              <div class="stat-icon queue"><i data-lucide="users"></i></div>
+              <div class="stat-body">
+                <span class="stat-label">Rate Limiter / Queue</span>
+                <strong class="stat-value" id="devops-queue-val">0 In Queue</strong>
+                <span class="stat-subtext" id="devops-queue-status">Gateway: Open (Direct Access)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-layout devops-grid">
+            <!-- Controller Controls -->
+            <div class="glass-card">
+              <h3 class="card-title"><i data-lucide="sliders"></i> Cloud Load Generator</h3>
+              <p class="description">Simulate high traffic rushes to test how the cloud infrastructure scales. When load spikes, the system automatically provisions nodes or puts users in a virtual checkout queue to prevent crashes.</p>
+              
+              <div class="traffic-slider-group">
+                <div class="slider-header">
+                  <span>Simulated Request Rate</span>
+                  <strong id="traffic-slider-val">35 req/s</strong>
+                </div>
+                <input type="range" id="traffic-range" min="10" max="1500" value="35" class="slider">
+              </div>
+
+              <div class="devops-preset-grid">
+                <button class="btn-preset active" data-preset="normal">
+                  <strong>Normal Traffic</strong>
+                  <span>Low load, 2 nodes</span>
+                </button>
+                <button class="btn-preset" data-preset="rush">
+                  <strong>Rush Hour Peak</strong>
+                  <span>~400 req/s, scaling triggered</span>
+                </button>
+                <button class="btn-preset" data-preset="flash">
+                  <strong>Ticket Flash Sale</strong>
+                  <span>~900 req/s, queue activated</span>
+                </button>
+                <button class="btn-preset" data-preset="ddos">
+                  <strong>DDoS Attack</strong>
+                  <span>1500 req/s, max nodes & rate limits</span>
+                </button>
+              </div>
+
+              <div class="tamper-box scale-mode-box">
+                <label class="checkbox-container">
+                  <input type="checkbox" id="autoscaling-checkbox" checked>
+                  <span class="checkmark"></span>
+                  <span class="tamper-label">Enable Dynamic Server Auto-Scaling</span>
+                </label>
+                <p class="description-small">If disabled, the server cluster will remain locked at current node count. Spikes in load will cause server crashes (503 Service Unavailable errors) or massive latency spikes, illustrating the importance of dynamic provisioning.</p>
+              </div>
+            </div>
+
+            <!-- NEW: Load Balancer Policy Card -->
+            <div class="glass-card" style="margin-top: 24px;">
+              <h3 class="card-title"><i data-lucide="git-merge"></i> Load Balancer Policy</h3>
+              <p class="description">Select the routing policy used to balance incoming bookings across active cluster nodes. Observe request allocations live below.</p>
+              <div class="form-group" style="margin-bottom:16px;">
+                <label for="lb-algorithm">Routing Policy</label>
+                <select id="lb-algorithm" class="form-control">
+                  <option value="round-robin">Round Robin (Sequential Redirection)</option>
+                  <option value="least-connections">Least Connections (Direct to lowest load)</option>
+                  <option value="sticky-session">Passenger Sticky Session (Consistent IP hashing)</option>
+                </select>
+              </div>
+              <div class="lb-stat-box" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; font-size: 0.75rem; border: 1px solid rgba(255,255,255,0.03); display:flex; justify-content:space-between;">
+                <div>Active Router: <strong id="lb-active-policy" class="text-success">Round Robin</strong></div>
+                <div>Ratio: <span id="lb-distribution-stats" style="color:var(--accent-cyan); font-weight:600;">Balanced (1:1)</span></div>
+              </div>
+            </div>
+
+            <!-- Server Node Visualizer & Metrics -->
+            <div class="glass-card node-viz-card">
+              <h3 class="card-title"><i data-lucide="network"></i> Active Node Cluster</h3>
+              
+              <div class="nodes-visualizer" id="nodes-visualizer-container">
+                <!-- Generated dynamically by JS -->
+              </div>
+
+              <!-- Latency & Database Performance -->
+              <div class="db-perf-section">
+                <h4><i data-lucide="database"></i> System Integrity Metrics</h4>
+                <div class="perf-row">
+                  <span>DB Transaction Success Rate</span>
+                  <strong class="text-success" id="devops-integrity-rate">100.00%</strong>
+                </div>
+                <div class="perf-row">
+                  <span>Average Latency</span>
+                  <strong id="devops-latency-val">18 ms</strong>
+                </div>
+                <div class="perf-row">
+                  <span>Server Crash State</span>
+                  <strong class="text-success" id="devops-crash-state">HEALTHY / ONLINE</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- NEW: Live Cloud Shell Terminal Logs -->
+            <div class="glass-card shell-terminal-card" style="margin-top: 24px; display: flex; flex-direction: column;">
+              <div class="card-header-actions" style="margin-bottom: 12px;">
+                <h3 class="card-title" style="margin-bottom: 0;"><i data-lucide="terminal"></i> Cloud Infrastructure Logs</h3>
+                <button class="btn-secondary btn-sm" id="btn-clear-logs" style="padding: 4px 10px;">Clear Console</button>
+              </div>
+              <div id="devops-terminal-logs" class="terminal-logs-viewport" style="background: #020205; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 14px; font-family: monospace; font-size: 0.75rem; height: 180px; overflow-y: auto; color: var(--success); line-height: 1.5; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
+                <!-- Filled dynamically with streaming logs -->
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
