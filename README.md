@@ -1,6 +1,6 @@
 # AeroTransit – Cloud-Based Bus Pass System
 
-🌐 Live Demo: https://dhakshanals.github.io/cloud-bus-pass-system/
+🌐 Live Demo: https://dhakshanals.github.io/CodeAlpha_cloud-bus-pass-system/
 
 AeroTransit is a cloud-based bus pass management system that digitizes the process of issuing, managing, and verifying bus passes. The platform provides a modern, user-friendly interface for passengers and administrators while demonstrating cloud computing concepts and scalable web application architecture.
 
